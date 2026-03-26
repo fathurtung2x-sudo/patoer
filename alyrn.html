@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>alyrn | God Tier OS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Plus+Jakarta+Sans:wght@400;600;800&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* === CORE SYSTEM === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #050505; color: #f8fafc; overflow-x: hidden; height: 100vh; display: flex; flex-direction: column; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        /* === LIVE VIDEO WALLPAPER === */
+        #os-video-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -3; transition: opacity 1s ease; opacity: 1; }
+        #os-fallback-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -4; background: #050505; }
+        .glass-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 5, 10, 0.4); backdrop-filter: blur(12px); z-index: -2; }
+
+        /* === ALYRN NAVBAR === */
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: rgba(10, 10, 12, 0.5); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 15px 30px; z-index: 100; transition: 0.3s; }
+        .brand { font-family: 'Caveat', cursive; font-size: 2.5rem; font-weight: 700; color: #fff; text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(168, 85, 247, 0.6); letter-spacing: 2px; cursor: default; user-select: none; margin-right: auto; }
+        .nav-links { display: flex; gap: 10px; align-items: center;}
+        .nav-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 10px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;}
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-btn.active { background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.4); box-shadow: 0 0 15px rgba(255,255,255,0.1);}
+
+        /* === APP CONTAINER (SPA) === */
+        .app-container { flex: 1; overflow-y: auto; padding: 30px; padding-bottom: 120px; position: relative; }
+        .app-section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .app-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === GLASSMORPHISM UI === */
+        .card { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+
+        /* === FORMS & BUTTONS === */
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+        .form-input { width: 100%; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 14px 16px; border-radius: 12px; outline: none; font-size: 1rem; transition: 0.3s;}
+        .form-input:focus { border-color: #38bdf8; background: rgba(0,0,0,0.7); }
+        .btn { padding: 14px 24px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; width: 100%; }
+        .btn-primary { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #000; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+        /* === 3 PANELS DESKTOP === */
+        /* Panel 1: Profile */
+        .profile-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; }
+        .profile-widget .avatar { width: 90px; height: 90px; border-radius: 50%; background-size: cover; background-position: center; border: 3px solid #38bdf8; box-shadow: 0 0 20px rgba(56,189,248,0.5); margin-bottom: 15px;}
+        .editable-status { background: rgba(168,85,247,0.2); color: #d8b4fe; border: 1px solid #a855f7; padding: 6px 15px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; display: inline-block;}
+        .editable-status:hover { background: rgba(168,85,247,0.4); }
+        
+        /* Panel 2: Analytics */
+        .heatmap-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; }
+        .heat-box { width: 100%; aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+        .heat-box.active { background: #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,0.5); border-color: transparent;}
+        
+        /* Panel 3: Terminal */
+        .terminal-box { background: rgba(0, 0, 0, 0.6); padding: 15px; border-radius: 12px; border: 1px solid rgba(56,189,248,0.3); font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #38bdf8; height: 100%; overflow-y: hidden; line-height: 1.6; }
+        .terminal-cursor { display: inline-block; width: 8px; height: 15px; background: #38bdf8; animation: blink 1s infinite; vertical-align: middle;}
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Widget & Notes */
+        .weather-box, .countdown-box { background: rgba(0,0,0,0.4); padding: 10px 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;}
+        .countdown-box { background: rgba(244,63,94,0.2); border-color: #f43f5e; color: #fda4af;}
+        .sticky-note { background: rgba(250, 204, 21, 0.05); border-left: 4px solid #facc15; padding: 15px; border-radius: 0 12px 12px 0; outline: none; min-height: 100px; color: #fef08a; font-size: 0.9rem; line-height: 1.5; border-top: none; border-right: none; border-bottom: none; resize: none; width: 100%;}
+        
+        /* === VAULTPAY PRO === */
+        .ai-advice { background: rgba(250, 204, 21, 0.1); border-left: 4px solid #facc15; padding: 16px; border-radius: 0 16px 16px 0; margin-bottom: 24px; font-weight: 600; font-size: 0.9rem; color: #fef08a; display: flex; align-items: center; gap: 12px;}
+        .ai-advice.good { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #a7f3d0; }
+        .ai-advice.bad { background: rgba(244, 63, 94, 0.1); border-color: #f43f5e; color: #fda4af; }
+
+        /* === DRIPGEN 5.0 === */
+        .preview-slot { border-radius: 16px; border: 1px dashed rgba(255,255,255,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: rgba(0,0,0,0.4); height: 200px;}
+        .preview-slot img { width: 100%; height: 100%; object-fit: contain; padding: 10px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));}
+        #ig-export-node { position: absolute; left: -9999px; top: -9999px; width: 1080px; height: 1920px; background: #0a0a0c; display: flex; flex-direction: column; align-items: center; padding: 100px 50px; border: 10px solid #38bdf8; border-radius: 50px;}
+
+        /* === MINI LO-FI PLAYER === */
+        #lofi-player { position: fixed; bottom: 20px; right: 80px; width: 300px; height: 80px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 9999; display: none; transition: 0.3s; }
+        .music-toggle { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); padding: 15px; border-radius: 50%; color: white; cursor: pointer; z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); transition: 0.3s; }
+        .music-toggle:hover { background: #38bdf8; border-color: #38bdf8; color: #000; }
+
+        /* === MODALS === */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 90%; max-width: 450px; }
+
+        /* === MOBILE RESPONSIVE === */
+        @media (max-width: 768px) {
+            .navbar { position: fixed; bottom: 0; left: 0; width: 100%; border-bottom: none; border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-around; padding: 10px; }
+            .brand, .wall-controls { display: none; }
+            .nav-links { width: 100%; justify-content: space-between; }
+            .nav-btn { flex-direction: column; padding: 8px; font-size: 0.7rem; border: none; gap: 4px;}
+            .grid-3, .grid-2, .grid-4 { grid-template-columns: 1fr; }
+            .app-container { padding: 15px; padding-bottom: 90px; }
+            #lofi-player { bottom: 90px; right: 10px; width: calc(100% - 20px); }
+            .music-toggle { bottom: 90px; right: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <img id="os-fallback-bg" src="https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=2070&auto=format&fit=crop">
+    <video id="os-video-bg" autoplay loop muted playsinline preload="auto"></video>
+    <div class="glass-overlay"></div>
+
+    <nav class="navbar">
+        <div class="brand">alyrn</div>
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="switchApp('home')" id="btn-home"><i data-lucide="layout-dashboard"></i> <span>Home</span></button>
+            <button class="nav-btn" onclick="switchApp('vp')" id="btn-vp"><i data-lucide="wallet"></i> <span>VaultPay</span></button>
+            <button class="nav-btn" onclick="switchApp('cr')" id="btn-cr"><i data-lucide="trending-up"></i> <span>Radar</span></button>
+            <button class="nav-btn" onclick="switchApp('dg')" id="btn-dg"><i data-lucide="shirt"></i> <span>DripGen</span></button>
+            <button class="nav-btn" onclick="switchApp('utbk')" id="btn-utbk"><i data-lucide="brain-circuit"></i> <span>UTBK</span></button>
+            <button class="nav-btn" onclick="switchApp('cloud')" id="btn-cloud"><i data-lucide="cloud"></i> <span>Cloud</span></button>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;" class="wall-controls">
+            <button class="btn btn-outline" style="padding: 8px; width:auto; border-radius:50%;" onclick="toggleMute()" id="mute-btn"><i data-lucide="volume-x" style="width:16px;"></i></button>
+            <select id="wall-select" style="background: rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 12px; outline: none; font-size:0.8rem;" onchange="changeWall(this.value)">
+                <option value="cyberpunk">Cyberpunk Neon</option>
+                <option value="sunset">Sunset City</option>
+                <option value="space">Deep Space</option>
+            </select>
+            <label class="btn btn-outline" style="padding: 8px; width:auto; font-size:0.8rem; cursor:pointer;" title="Upload Video Custom">
+                <i data-lucide="upload" style="width:16px;"></i>
+                <input type="file" accept="video/mp4, video/webm" style="display: none;" onchange="uploadWall(event)">
+            </label>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        
+        <div id="app-home" class="app-section active">
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="weather-box"><i data-lucide="cloud-sun" style="width:18px;"></i><span id="weather-val">Loading...</span></div>
+                <div class="countdown-box"><i data-lucide="flame" style="width:18px;"></i><span id="utbk-countdown">H-00 UTBK 2026</span></div>
+            </div>
+
+            <div class="grid-3" style="margin-bottom: 24px; align-items: stretch;">
+                <div class="card" style="margin: 0;">
+                    <div class="profile-widget" onclick="openProfileModal()">
+                        <div class="avatar" id="home-avatar"></div>
+                        <h2 style="font-size: 1.6rem; font-weight: 800;" id="home-name">King Patur</h2>
+                        <div style="color: #38bdf8; font-weight: 800; font-size: 0.85rem; margin-top: 5px;"><i data-lucide="award" style="width:14px; display:inline;"></i> Rank: <span id="home-rank">Pejuang UTBK</span></div>
+                    </div>
+                    <div style="text-align: center;"><div class="editable-status" onclick="editStatus()" id="home-status" title="Klik untuk ubah">alyrn Super Admin</div></div>
+                </div>
+
+                <div class="card" style="margin: 0; display: flex; flex-direction: column;">
+                    <h3 style="font-size: 0.9rem; text-transform: uppercase; color:#94a3b8; margin-bottom: 10px; text-align: center;">Mastery & Consistency</h3>
+                    <div style="flex: 1; position: relative; min-height: 120px;"><canvas id="radar-chart"></canvas></div>
+                    <div class="heatmap-container" id="heatmap-grid">
+                        </div>
+                </div>
+
+                <div class="card" style="margin: 0; padding: 15px; border-color: #f43f5e; background: rgba(20, 0, 0, 0.4);">
+                    <div class="terminal-box" id="live-terminal" style="color: #fca5a5; border-color: #f43f5e; overflow-y: auto; height: 250px;">
+                        <div style="color: #f43f5e; font-weight: 800; margin-bottom: 10px; border-bottom: 1px solid rgba(244,63,94,0.3); padding-bottom: 5px;">
+                            [SYSTEM OVERRIDE: GOD MODE]
+                        </div>
+                        <div id="term-text" style="display: inline; line-height: 1.8;"></div><span class="terminal-cursor"></span>
+                        
+                        <div style="margin-top: 20px; font-size: 0.75rem; color: #94a3b8; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                            <p>> MOTTO: "Coding hari ini, kuasai dunia besok. Error itu tantangan, bukan alasan nyerah."</p>
+                            <p style="margin-top: 10px; color: #fcd34d;">> ADVICE: "Saham gorengan emang gurih, tapi investasi di otak itu profitnya seumur hidup."</p>
+                            <p style="margin-top: 10px; color: #38bdf8;">> GOAL: UTBK 2026 - Lulus atau Lulus Banget!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <div style="background: rgba(0,0,0,0.5); padding: 12px 20px; font-weight: 800; font-size: 0.9rem; color: #facc15; display:flex; align-items:center; gap:8px;"><i data-lucide="sticky-note"></i> Quick Notes</div>
+                    <textarea class="sticky-note" id="sticky-note" placeholder="Tulis reminder penting lu di sini..." oninput="saveNote()"></textarea>
+                </div>
+                
+                <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+                    <h3 style="font-size: 0.9rem; text-transform: uppercase; color:#94a3b8; margin-bottom: 10px;">Vault Balance</h3>
+                    <div style="font-size: 2.2rem; font-weight: 800; color: #38bdf8;" id="home-balance">IDR 0</div>
+                    <div style="font-size: 0.85rem; color: #4ade80; margin-top:5px; font-weight:600;" id="home-income">+ Pemasukan: IDR 0</div>
+                </div>
+
+                <div class="card" style="display:flex; flex-direction:column; justify-content:center; cursor:pointer;" onclick="switchApp('dg')">
+                    <h3 style="font-size: 0.9rem; text-transform: uppercase; color:#94a3b8; margin-bottom: 10px;">Last Outfit Drip</h3>
+                    <div class="last-drip-widget" id="home-last-drip">
+                        <span style="color:#94a3b8; font-size:0.8rem;">Belum ada Drip.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-vp" class="app-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 style="font-size: 2.2rem; font-weight: 800;"><i data-lucide="wallet" style="display:inline; width:30px; color:#38bdf8;"></i> VaultPay</h1>
+                <button class="btn btn-primary" style="width: auto;" onclick="openTxModal()">+ Input Transaksi</button>
+            </div>
+
+            <div class="ai-advice" id="vp-advice">
+                <i data-lucide="bot"></i><span id="vp-advice-text">Memuat analisa keuangan...</span>
+            </div>
+
+            <div class="grid-3">
+                <div class="card" style="border-color: #38bdf8;">
+                    <div style="font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Total Saldo Aktif</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: #38bdf8;" id="vp-bal">IDR 0</div>
+                </div>
+                <div class="card">
+                    <div style="font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Pemasukan (Bulan Ini)</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: #10b981;" id="vp-in">IDR 0</div>
+                </div>
+                <div class="card">
+                    <div style="font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Pengeluaran (Bulan Ini)</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: #f43f5e;" id="vp-out">IDR 0</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Arus Kas (Trend)</h3>
+                    <div style="height: 180px; width: 100%; position: relative;"><canvas id="vp-chart"></canvas></div>
+                </div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="font-size: 1.1rem;">Riwayat Transaksi</h3>
+                        <span style="font-size: 0.8rem; color:#94a3b8; cursor:pointer;" onclick="alert('Arsip otomatis jalan pas ganti bulan sesuai zona waktu WITA!')">Auto-Arsip On ✅</span>
+                    </div>
+                    <div id="vp-history" style="max-height: 180px; overflow-y: auto; padding-right: 5px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-cr" class="app-section">
+            <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 30px;"><i data-lucide="trending-up" style="display:inline; width:30px; color:#10b981;"></i> CuanRadar</h1>
+            <h3 style="margin-bottom: 15px; color: #eab308;"><i data-lucide="flame" style="display:inline;"></i> Global Crypto Trending</h3>
+            <div class="grid-4" id="cr-trending"><p style="color:#94a3b8;">Loading...</p></div>
+            <h3 style="margin-bottom: 15px; margin-top: 10px;"><i data-lucide="activity" style="display:inline;"></i> Watchlist & Valas (IDR)</h3>
+            <div class="grid-4" id="cr-watchlist"><p style="color:#94a3b8;">Loading...</p></div>
+
+            <div class="grid-2" style="margin-top: 10px;">
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">Kalkulator Saham Gorengan</h3>
+                    <div class="grid-2">
+                        <div class="input-group"><label>Harga Beli (Rp)</label><input type="number" id="cr-entry" class="form-input" placeholder="150"></div>
+                        <div class="input-group"><label>Modal (Rp)</label><input type="number" id="cr-modal" class="form-input" placeholder="10000000"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group"><label>Take Profit (%)</label><input type="number" id="cr-tp" class="form-input" value="15"></div>
+                        <div class="input-group"><label>Cut Loss (%)</label><input type="number" id="cr-cl" class="form-input" value="5"></div>
+                    </div>
+                    <button class="btn btn-primary" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff;" onclick="calcTrade()">Kalkulasi Target</button>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">Trading Plan</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:rgba(0,0,0,0.3); border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.1);"><div><div style="font-size:0.8rem; color:#94a3b8;">Total Lot</div><div style="font-weight:800; font-size:1.2rem;" id="res-lot">0 Lot</div></div><div style="text-align:right;"><div style="font-size:0.8rem; color:#94a3b8;">Modal Dipakai</div><div style="font-weight:800;" id="res-used">Rp 0</div></div></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:rgba(0,0,0,0.3); border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.1); border-left:4px solid #10b981;"><div><div style="font-size:0.8rem; color:#94a3b8;">Jual Take Profit</div><div style="font-weight:800; font-size:1.2rem; color:#10b981;" id="res-tpprice">Rp 0</div></div><div style="text-align:right;"><div style="font-size:0.8rem; color:#94a3b8;">Net Profit</div><div style="font-weight:800; color:#10b981;" id="res-tpprof">+ Rp 0</div></div></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:rgba(0,0,0,0.3); border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.1); border-left:4px solid #f43f5e;"><div><div style="font-size:0.8rem; color:#94a3b8;">Jual Cut Loss</div><div style="font-weight:800; font-size:1.2rem; color:#f43f5e;" id="res-clprice">Rp 0</div></div><div style="text-align:right;"><div style="font-size:0.8rem; color:#94a3b8;">Max Loss</div><div style="font-weight:800; color:#f43f5e;" id="res-clloss">- Rp 0</div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-dg" class="app-section">
+            <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 30px;"><i data-lucide="shirt" style="display:inline; width:30px; color:#818cf8;"></i> DripGen 5.0</h1>
+            <div class="grid-2">
+                <div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 15px;">Generate Outfit</h3>
+                        <div class="input-group"><label>Mood Hari Ini</label><select id="dg-mood" class="form-input"><option value="streetwear">Streetwear</option><option value="casual">Casual</option><option value="formal">Formal</option></select></div>
+                        <button class="btn btn-primary" onclick="generateDrip()">⚡ Generate Real Drip</button>
+                    </div>
+
+                    <div class="card" id="dg-result-card" style="display: none; border-color: #818cf8;">
+                        <h3 style="margin-bottom: 15px;">Hasil Gacha <span style="float:right; color:#818cf8;" id="dg-score">10/10 🔥</span></h3>
+                        <div class="outfit-preview">
+                            <div class="preview-slot" id="dg-slot-t">👕</div>
+                            <div class="preview-slot" id="dg-slot-b">👖</div>
+                            <div class="preview-slot" id="dg-slot-s">👟</div>
+                        </div>
+                        <button class="btn" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: white;" onclick="exportToIG()"><i data-lucide="instagram"></i> Flex to IG Story</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3>Vault Lemari</h3>
+                            <a href="https://www.remove.bg/upload" target="_blank" class="btn btn-outline" style="width: auto; padding: 6px 12px; font-size: 0.75rem; color: #f43f5e; border-color: #f43f5e;"><i data-lucide="scissors"></i> Hapus BG</a>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group"><label>Nama Barang</label><input type="text" id="dg-in-name" class="form-input" placeholder="Cth: Hoodie Hitam"></div>
+                            <div class="input-group"><label>Upload (Di-kompres WebP)</label><input type="file" id="dg-in-file" class="form-input" accept="image/*" style="padding: 10px;"></div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group"><label>Kategori</label><select id="dg-in-cat" class="form-input"><option value="atasan">Atasan</option><option value="bawahan">Bawahan</option><option value="sepatu">Sepatu</option></select></div>
+                            <div class="input-group"><label>Style</label><select id="dg-in-style" class="form-input"><option value="streetwear">Streetwear</option><option value="casual">Casual</option><option value="formal">Formal</option></select></div>
+                        </div>
+                        <button class="btn btn-outline" style="border-color: #818cf8; color: #818cf8;" onclick="addCloth()">Simpan ke Lemari</button>
+                    </div>
+                    <div class="card" style="border-color: #f59e0b;"><h3 style="color: #f59e0b; margin-bottom: 10px;"><i data-lucide="shopping-cart"></i> Joni's Saran</h3><p id="dg-shopping-text" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5; margin-bottom: 15px;">Menganalisa lemari...</p><div class="grid-2" id="dg-shopping-links" style="display: none;"><a href="#" target="_blank" class="btn" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; text-decoration: none;" id="link-tokped">Tokopedia</a><a href="#" target="_blank" class="btn" style="background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid #f97316; text-decoration: none;" id="link-shopee">Shopee</a></div></div>
+                </div>
+            </div>
+            
+            <div id="ig-export-node">
+                <div style="font-family: 'Caveat', cursive; color: #fff; font-size: 5rem; margin-bottom: 40px; font-weight: 700; text-shadow: 0 0 20px rgba(56, 189, 248, 0.8);">alyrn</div>
+                <div style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); padding: 40px; border-radius: 40px; display: flex; flex-direction: column; gap: 30px; align-items: center; width: 80%; backdrop-filter: blur(20px);">
+                    <img id="exp-t" src="" style="width: 300px; height: 300px; object-fit: contain; filter: drop-shadow(0 20px 20px rgba(0,0,0,0.6));"><img id="exp-b" src="" style="width: 300px; height: 300px; object-fit: contain; filter: drop-shadow(0 20px 20px rgba(0,0,0,0.6));"><img id="exp-s" src="" style="width: 300px; height: 300px; object-fit: contain; filter: drop-shadow(0 20px 20px rgba(0,0,0,0.6));">
+                </div>
+                <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 20px 50px; border-radius: 30px; margin-top: 50px; font-size: 2.5rem; font-weight: 800; color: #fff;" id="exp-score">10/10</div>
+                <div style="margin-top: 40px; color: #94a3b8; font-size: 1.8rem; font-weight: 600;">Drip of The Day</div>
+            </div>
+        </div>
+
+        <div id="app-utbk" class="app-section">
+            <div style="text-align: center; margin-bottom: 40px;"><h1 style="font-size: 2.5rem; font-weight: 800; color: #f43f5e; text-shadow: 0 0 15px rgba(244,63,94,0.5);">UTBK Grind</h1><p style="color: #94a3b8;">Penalaran Matematika (Dynamic Generator)</p></div>
+            <div class="grid-2">
+                <div class="card" style="text-align: center; border-color: #f43f5e;">
+                    <h3 style="color: #f43f5e; margin-bottom: 10px;">Pomodoro Timer</h3>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 20px;">Fokus 25 Menit = +50 XP 🔥</p>
+                    <div style="font-size: 5.5rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-bottom: 30px; text-shadow: 0 4px 20px rgba(244,63,94,0.6);" id="utbk-timer">25:00</div>
+                    <div style="display: flex; gap: 15px; justify-content: center;"><button class="btn btn-primary" style="background: #f43f5e; color: white; width: 140px;" id="utbk-btn-start" onclick="toggleTimer()">Mulai Fokus</button><button class="btn btn-outline" style="width: 100px;" onclick="resetTimer()">Reset</button></div>
+                </div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;"><h3 style="color: #f8fafc;">Gacha Soal</h3><button class="btn btn-outline" style="width:auto; padding: 6px 12px; font-size: 0.8rem;" onclick="generateUTBK()"><i data-lucide="refresh-cw" style="width:14px;"></i> Acak Soal</button></div>
+                    <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; font-size: 1.05rem; line-height: 1.6;" id="utbk-q">Memuat soal AI...</div>
+                    <div id="utbk-opts"></div><div id="utbk-exp" style="display: none; padding: 15px; margin-top: 15px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-cloud" class="app-section">
+            <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 30px;"><i data-lucide="cloud" style="display:inline; color:#38bdf8;"></i> alyrn Cloud</h1>
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="margin-bottom: 20px; color: #4ade80;"><i data-lucide="download-cloud" style="display:inline;"></i> Backup OS Data</h3>
+                    <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; line-height: 1.6;">Amankan data keuangan, foto lemari DripGen, XP UTBK, dan notes lu ke dalam satu file lokal.</p>
+                    <button class="btn btn-primary" style="background: #10b981; color:#000;" onclick="backupCloud()"><i data-lucide="download"></i> Download Data (.json)</button>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 20px; color: #f59e0b;"><i data-lucide="upload-cloud" style="display:inline;"></i> Restore OS Data</h3>
+                    <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; line-height: 1.6;">Upload file backup di sini buat ngembaliin kondisi alyrn OS lu persis seperti semula.</p>
+                    <label class="btn btn-outline" style="border-color: #f59e0b; color: #f59e0b; cursor: pointer;">
+                        <i data-lucide="upload"></i> Upload File Backup
+                        <input type="file" accept=".json" style="display: none;" onchange="restoreCloud(event)">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="music-toggle" onclick="toggleMusic()" id="music-btn"><i data-lucide="music"></i></div>
+    <div id="lofi-player">
+        <iframe style="border-radius:12px; width: 100%; height: 80px;" src="https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator&theme=0" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    </div>
+
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Edit Profil & Status</h2>
+            <div class="input-group"><label>Nama Panggilan</label><input type="text" id="prof-in-name" class="form-input"></div>
+            <div class="input-group"><label>Foto Profil (JPG/PNG)</label><input type="file" id="prof-in-file" class="form-input" accept="image/*"></div>
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button class="btn btn-outline" onclick="closeProfileModal()">Batal</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="vp-tx-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Input Transaksi</h2>
+            <div class="input-group"><label>Jenis</label><select id="vp-in-type" class="form-input"><option value="out">Pengeluaran (-)</option><option value="in">Pemasukan (+)</option></select></div>
+            <div class="input-group"><label>Deskripsi</label><input type="text" id="vp-in-name" class="form-input" placeholder="Cth: Jajan / Profit Saham"></div>
+            <div class="input-group"><label>Nominal (Rp)</label><input type="number" id="vp-in-amt" class="form-input"></div>
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button class="btn btn-outline" onclick="closeTxModal()">Batal</button>
+                <button class="btn btn-primary" onclick="saveVP()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // === WITA TIME ENGINE (Makassar Fix) ===
+        function getWitaDate() {
+            let d = new Date();
+            let utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+            let nd = new Date(utc + (3600000 * 8)); // +8 for WITA
+            return nd.toISOString().split('T')[0];
+        }
+
+        // === 1. ROUTING & CORE SPA LOGIC ===
+        function switchApp(app) {
+            document.querySelectorAll('.app-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById('app-' + app).classList.add('active');
+            document.getElementById('btn-' + app).classList.add('active');
+            
+            if(app === 'home') renderHome();
+            if(app === 'vp') renderVP();
+            if(app === 'dg') analyzeWardrobe();
+            if(app === 'cr') fetchCR();
+        }
+
+        // === 2. BACKGROUND, WALLPAPER, MUSIC ===
+        const osVideo = document.getElementById('os-video-bg');
+        const fallbackImg = document.getElementById('os-fallback-bg');
+        const muteBtn = document.getElementById('mute-btn');
+        
+        const wallpapers = {
+            cyberpunk: "https://cdn.pixabay.com/video/2020/05/24/40087-425261494_large.mp4",
+            sunset: "https://cdn.pixabay.com/video/2019/02/09/21262-316527878_large.mp4",
+            space: "https://cdn.pixabay.com/video/2020/04/09/35805-408920404_large.mp4"
+        };
+        const savedWall = localStorage.getItem('patur_os_wall') || 'cyberpunk';
+        if(wallpapers[savedWall]) { document.getElementById('wall-select').value = savedWall; osVideo.src = wallpapers[savedWall]; } else { osVideo.src = savedWall; }
+
+        osVideo.onerror = function() { osVideo.style.display = 'none'; fallbackImg.style.display = 'block'; };
+        osVideo.onloadeddata = function() { osVideo.style.display = 'block'; fallbackImg.style.display = 'none'; };
+
+        function changeWall(val) {
+            if(wallpapers[val]) { osVideo.style.opacity = 0; setTimeout(() => { osVideo.src = wallpapers[val]; osVideo.play(); osVideo.style.opacity = 1; localStorage.setItem('patur_os_wall', val); }, 500); }
+        }
+        function uploadWall(e) {
+            const file = e.target.files[0];
+            if(file) { const url = URL.createObjectURL(file); osVideo.style.opacity = 0; setTimeout(() => { osVideo.src = url; osVideo.play(); osVideo.style.opacity = 1; }, 500); }
+        }
+        function toggleMute() {
+            osVideo.muted = !osVideo.muted;
+            if(osVideo.muted) { muteBtn.innerHTML = '<i data-lucide="volume-x" style="width:16px;"></i>'; muteBtn.style.color = "white"; muteBtn.style.borderColor = "rgba(255,255,255,0.2)"; } 
+            else { muteBtn.innerHTML = '<i data-lucide="volume-2" style="width:16px;"></i>'; muteBtn.style.color = "#38bdf8"; muteBtn.style.borderColor = "#38bdf8"; }
+            lucide.createIcons();
+        }
+        function toggleMusic() {
+            const player = document.getElementById('lofi-player'); const btn = document.getElementById('music-btn');
+            if(player.style.display === 'block') { player.style.display = 'none'; btn.style.background = 'rgba(0,0,0,0.6)'; btn.style.borderColor = 'rgba(255,255,255,0.2)'; btn.style.color = 'white'; } 
+            else { player.style.display = 'block'; btn.style.background = '#38bdf8'; btn.style.borderColor = '#38bdf8'; btn.style.color = '#000'; }
+        }
+
+        // === 3. DESKTOP & THE 3 PANELS LOGIC ===
+        let uXP = parseInt(localStorage.getItem('patur_xp')) || 0;
+        let activeDates = JSON.parse(localStorage.getItem('patur_active_dates')) || [];
+        let radarChart = null;
+        let termInterval = null;
+        
+        function getRank(xp) { if(xp < 500) return "Pejuang UTBK"; if(xp < 2000) return "Penakluk Logika"; return "Master Penalaran"; }
+        function trackAction() { const today = getWitaDate(); if(!activeDates.includes(today)) { activeDates.push(today); localStorage.setItem('patur_active_dates', JSON.stringify(activeDates)); renderHome(); } }
+
+        function editStatus() {
+            let s = prompt("Tulis status baru lu:", localStorage.getItem('patur_os_status') || 'alyrn Super Admin');
+            if(s) { localStorage.setItem('patur_os_status', s); renderHome(); }
+        }
+
+        function renderHome() {
+            // Panel 1: Profile
+            document.getElementById('home-name').innerText = localStorage.getItem('patur_os_name') || 'King Patur';
+            document.getElementById('home-status').innerText = localStorage.getItem('patur_os_status') || 'alyrn Super Admin';
+            document.getElementById('home-rank').innerText = getRank(uXP);
+            const pPfp = localStorage.getItem('patur_os_pfp');
+            if(pPfp) document.getElementById('home-avatar').style.backgroundImage = `url(${pPfp})`;
+
+            // Panel 2: Analytics (Radar & Heatmap)
+            let pm = Math.min(100, (uXP/2000)*100); 
+            let pk = Math.min(100, (uXP/2500)*100 + 10);
+            let pu = Math.min(100, (uXP/3000)*100 + 20);
+            let lit = Math.min(100, (uXP/4000)*100 + 5);
+
+            if(radarChart) radarChart.destroy();
+            radarChart = new Chart(document.getElementById('radar-chart').getContext('2d'), {
+                type: 'radar',
+                data: { labels: ['Matematika', 'Kuantitatif', 'Umum', 'Literasi'], datasets: [{ data: [pm, pk, pu, lit], borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.4)', borderWidth: 2, pointRadius: 0 }] },
+                options: { maintainAspectRatio: false, scales: { r: { ticks: {display: false}, grid: {color: 'rgba(255,255,255,0.1)'}, pointLabels: {color: '#94a3b8', font:{size:10}} } }, plugins: {legend:{display:false}} }
+            });
+
+            // Heatmap (Last 14 days)
+            let heatHtml = '';
+            for(let i=13; i>=0; i--) {
+                let d = new Date(); let utc = d.getTime() + (d.getTimezoneOffset() * 60000); let wita = new Date(utc + (3600000 * 8));
+                wita.setDate(wita.getDate() - i);
+                let dateStr = wita.toISOString().split('T')[0];
+                let isActive = activeDates.includes(dateStr) ? 'active' : '';
+                heatHtml += `<div class="heat-box ${isActive}" title="${dateStr}"></div>`;
+            }
+            document.getElementById('heatmap-grid').innerHTML = heatHtml;
+
+            // Panel 3: Terminal Briefing (UPDATE BACOTAN DI SINI)
+            if(termInterval) clearInterval(termInterval);
+            let termText = document.getElementById('term-text'); termText.innerHTML = '';
+            const briefing = [
+                `> [SYSTEM] Welcome back, King Patur.`,
+                `> [STATUS] Mental Juara: ON.`,
+                `> [ADVICE] Drip lu udah 10/10, sekarang tinggal skill coding-nya dibikin 100/10.`,
+                `> [REMINDER] UTBK makin deket, jangan cuma jago di portofolio, jago juga di logika matematika.`,
+                `> [SAHAM] Pantau watchlist, tapi jangan lupa pantau masa depan.`,
+                `> [ACTION] Selesaikan 1 sesi Pomodoro hari ini atau Joni bakal ngomel.`,
+                `> [SYSTEM] All modules are stable. Happy grinding, King!`
+            ];
+            
+            let lineIdx = 0; let charIdx = 0;
+            termInterval = setInterval(() => {
+                if(lineIdx < briefing.length) {
+                    if(charIdx < briefing[lineIdx].length) { termText.innerHTML += briefing[lineIdx].charAt(charIdx); charIdx++; } 
+                    else { termText.innerHTML += '<br>'; lineIdx++; charIdx = 0; }
+                } else { clearInterval(termInterval); }
+            }, 30);
+
+            // Bottom Widgets
+            document.getElementById('sticky-note').value = localStorage.getItem('patur_os_note') || '';
+            const lastDrip = JSON.parse(localStorage.getItem('dg_last'));
+            if(lastDrip) { document.getElementById('home-last-drip').innerHTML = `<img src="${lastDrip.top}"><img src="${lastDrip.bot}"><img src="${lastDrip.shoe}">`; }
+        }
+
+        function saveNote() { localStorage.setItem('patur_os_note', document.getElementById('sticky-note').value); }
+        
+        function openProfileModal() { document.getElementById('prof-in-name').value = localStorage.getItem('patur_os_name') || 'King Patur'; document.getElementById('profile-modal').style.display = 'flex'; }
+        function closeProfileModal() { document.getElementById('profile-modal').style.display = 'none'; }
+        function saveProfile() {
+            let n = document.getElementById('prof-in-name').value; let f = document.getElementById('prof-in-file').files[0];
+            if(n) localStorage.setItem('patur_os_name', n);
+            if(f) { compressImg(f, 400, (b64) => { localStorage.setItem('patur_os_pfp', b64); closeProfileModal(); renderHome(); }); } 
+            else { closeProfileModal(); renderHome(); }
+        }
+
+        function updateCountdown() {
+            const diff = new Date("2026-04-30T00:00:00").getTime() - new Date().getTime();
+            document.getElementById('utbk-countdown').innerText = diff > 0 ? `H-${Math.floor(diff/(1000*60*60*24))} UTBK` : `UTBK Tiba!`;
+        }
+        updateCountdown(); setInterval(updateCountdown, 86400000);
+
+        async function fetchWeather() {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=-5.1476&longitude=119.4327&current_weather=true`);
+                const data = await res.json();
+                if(data.current_weather) document.getElementById('weather-val').innerText = `${Math.round(data.current_weather.temperature)}°C MKS`;
+            } catch(e) { document.getElementById('weather-val').innerText = "28°C Offline"; }
+        }
+        fetchWeather();
+
+        // === 4. CUANRADAR LOGIC ===
+        async function fetchCR() {
+            try {
+                const resT = await fetch('https://api.coingecko.com/api/v3/search/trending');
+                const top4 = (await resT.json()).coins.slice(0, 4);
+                document.getElementById('cr-trending').innerHTML = top4.map(c => `<div class="card" style="padding:15px; margin-bottom:0;"><div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; font-weight:600;"><span style="display:flex; align-items:center; gap:8px; color:#94a3b8;"><img src="${c.item.thumb}" style="width:20px; border-radius:50%;"> ${c.item.name}</span> <span style="background:rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 8px;">${c.item.symbol}</span></div><div style="font-size:1.2rem; font-weight:800; margin-top:8px;">Rank #${c.item.market_cap_rank}</div></div>`).join('');
+
+                const resW = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana,pax-gold,tether&vs_currencies=idr&include_24hr_change=true');
+                const dW = await resW.json();
+                let goldGram = dW['pax-gold'].idr / 31.1035; 
+                const items = [
+                    { name: 'BTC', label: 'Bitcoin', price: dW['bitcoin'].idr, change: dW['bitcoin'].idr_24h_change },
+                    { name: 'SOL', label: 'Solana', price: dW['solana'].idr, change: dW['solana'].idr_24h_change },
+                    { name: 'XAU', label: 'Emas (Gram)', price: goldGram, change: dW['pax-gold'].idr_24h_change },
+                    { name: 'USD', label: 'US Dollar', price: dW['tether'].idr, change: dW['tether'].idr_24h_change }
+                ];
+                document.getElementById('cr-watchlist').innerHTML = items.map(c => { let up = c.change >= 0; return `<div class="card" style="padding:15px; margin-bottom:0;"><div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600;"><span style="color:#94a3b8;">${c.label}</span> <span style="background:rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 8px;">${c.name}</span></div><div style="font-size:1.4rem; font-weight:800; margin-top:8px;">Rp ${Math.round(c.price).toLocaleString('id-ID')}</div><div style="font-size:0.8rem; font-weight:800; margin-top:5px; color:${up ? '#10b981' : '#f43f5e'}">${up ? '▲' : '▼'} ${Math.abs(c.change).toFixed(2)}%</div></div>`; }).join('');
+            } catch(e) { console.log("CR Api Limit"); }
+        }
+        setInterval(fetchCR, 60000);
+
+        function calcTrade() {
+            let e = parseFloat(document.getElementById('cr-entry').value), m = parseFloat(document.getElementById('cr-modal').value);
+            if(!e || !m) return alert("Isi Harga Beli & Modal!");
+            let tp = parseFloat(document.getElementById('cr-tp').value) || 15, cl = parseFloat(document.getElementById('cr-cl').value) || 5;
+            let lot = Math.floor(m / (e * 100)), used = lot * (e * 100);
+            let tPrc = e * (1 + (tp/100)), cPrc = e * (1 - (cl/100));
+            document.getElementById('res-lot').innerText = `${lot.toLocaleString('id-ID')} Lot`; document.getElementById('res-used').innerText = `Rp ${used.toLocaleString('id-ID')}`;
+            document.getElementById('res-tpprice').innerText = `Rp ${Math.round(tPrc)}`; document.getElementById('res-tpprof').innerText = `+ Rp ${Math.round((tPrc - e) * lot * 100).toLocaleString('id-ID')}`;
+            document.getElementById('res-clprice').innerText = `Rp ${Math.round(cPrc)}`; document.getElementById('res-clloss').innerText = `- Rp ${Math.round(Math.abs((e - cPrc) * lot * 100)).toLocaleString('id-ID')}`;
+        }
+
+        // === 5. VAULTPAY PRO LOGIC ===
+        let vpDB = JSON.parse(localStorage.getItem('vp_db')) || [];
+        let vpChart = null;
+
+        function openTxModal() { document.getElementById('vp-tx-modal').style.display = 'flex'; }
+        function closeTxModal() { document.getElementById('vp-tx-modal').style.display = 'none'; }
+        
+        function saveVP() {
+            let ty = document.getElementById('vp-in-type').value, n = document.getElementById('vp-in-name').value, a = parseInt(document.getElementById('vp-in-amt').value);
+            let d = getWitaDate(); // WITA Engine
+            if(n && a) { 
+                vpDB.push({ id: Date.now(), type: ty, name: n, amt: a, date: d }); 
+                localStorage.setItem('vp_db', JSON.stringify(vpDB)); 
+                closeTxModal(); document.getElementById('vp-in-name').value=''; document.getElementById('vp-in-amt').value=''; 
+                if(ty === 'in') { uXP += 50; localStorage.setItem('patur_xp', uXP); } // Bonus XP nabung
+                trackAction(); renderVP(); renderHome();
+            } else { alert("Lengkapi form!"); }
+        }
+
+        function delVpTx(id) { if(confirm("Hapus transaksi?")){ vpDB = vpDB.filter(x => x.id !== id); localStorage.setItem('vp_db', JSON.stringify(vpDB)); renderVP(); renderHome(); } }
+
+        function renderVP() {
+            const curMo = getWitaDate().substring(0,7);
+            const moData = vpDB.filter(t => t.date.startsWith(curMo));
+
+            let tIn = moData.filter(t=>t.type==='in').reduce((s,t)=>s+t.amt, 0);
+            let tOut = moData.filter(t=>t.type==='out').reduce((s,t)=>s+t.amt, 0);
+            let bal = tIn - tOut;
+
+            document.getElementById('vp-bal').innerText = `IDR ${bal.toLocaleString('id-ID')}`;
+            document.getElementById('vp-in').innerText = `IDR ${tIn.toLocaleString('id-ID')}`;
+            document.getElementById('vp-out').innerText = `IDR ${tOut.toLocaleString('id-ID')}`;
+            
+            document.getElementById('home-balance').innerText = `IDR ${bal.toLocaleString('id-ID')}`;
+            document.getElementById('home-income').innerText = `+ Pemasukan: IDR ${tIn.toLocaleString('id-ID')}`;
+
+            let adv = document.getElementById('vp-advice'); let advT = document.getElementById('vp-advice-text');
+            adv.className = 'ai-advice';
+            if(tIn === 0) { advT.innerText = "Belum ada pemasukan bulan ini, masukin saldo lu dulu King."; } 
+            else {
+                let ratio = tOut / tIn;
+                if(ratio < 0.5) { adv.classList.add('good'); advT.innerText = "alyrn Advice: Keuangan sehat, King! Saldo lu masih gemuk."; }
+                else if(ratio <= 0.8) { advT.innerText = "Peringatan Joni: Rem dikit King! Udah lumayan kepake nih."; }
+                else if(ratio <= 1) { adv.classList.add('bad'); advT.innerText = "Peringatan Joni: Duit lu sisa dikit, jangan kebanyakan jajan DripGen dulu."; }
+                else { adv.classList.add('bad'); advT.innerText = "Minus vro! Lu udah overbudget parah bulan ini. Cek lagi catatannya."; }
+            }
+
+            document.getElementById('vp-history').innerHTML = moData.slice().reverse().map(t => {
+                let isOut = t.type === 'out';
+                return `<div class="tx-row"><div><div style="font-size:0.95rem; font-weight:600;">${t.name}</div><div style="font-size:0.75rem; color:#94a3b8;">${t.date}</div></div><div style="display:flex; align-items:center; gap:15px;"><span class="${isOut ? 'tx-out' : 'tx-in'}">${isOut ? '-' : '+'} Rp ${t.amt.toLocaleString('id-ID')}</span><button onclick="delVpTx(${t.id})" style="background:none; border:none; color:#94a3b8; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button></div></div>`;
+            }).join('') || '<p style="color:#94a3b8; font-size:0.9rem;">Belum ada transaksi bulan ini.</p>';
+            lucide.createIcons();
+
+            if(vpChart) vpChart.destroy();
+            if(moData.length > 0) {
+                let dMap = {}; moData.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(t=>{ if(t.type==='out') dMap[t.date] = (dMap[t.date]||0) + t.amt; });
+                vpChart = new Chart(document.getElementById('vp-chart').getContext('2d'), {
+                    type: 'line', data: { labels: Object.keys(dMap).slice(-10), datasets: [{ label: 'Pengeluaran', data: Object.values(dMap).slice(-10), borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.2)', borderWidth: 2, fill: true, tension: 0.4 }] },
+                    options: { maintainAspectRatio: false, animation: false, normalized: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
+                });
+            }
+        }
+
+        // === 6. DRIPGEN 5.0 LOGIC (Anti Memori Jebol) ===
+        let dgVault = JSON.parse(localStorage.getItem('dg_vault')) || [];
+        let curFit = null;
+
+        function compressImg(file, maxSize, cb) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const cvs = document.createElement('canvas'); 
+                    let w = img.width, h = img.height;
+                    if(w > h) { if(w > maxSize) { h *= maxSize/w; w = maxSize; } } else { if(h > maxSize) { w *= maxSize/h; h = maxSize; } }
+                    cvs.width = w; cvs.height = h;
+                    const ctx = cvs.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                    cb(cvs.toDataURL('image/webp', 0.5)); 
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addCloth() {
+            const n = document.getElementById('dg-in-name').value, c = document.getElementById('dg-in-cat').value, s = document.getElementById('dg-in-style').value, f = document.getElementById('dg-in-file').files[0];
+            if(!n || !f) return alert("Pilih foto dan isi nama barang!");
+            compressImg(f, 250, (b64) => {
+                try {
+                    dgVault.push({ id: Date.now(), name: n, cat: c, style: s, img: b64 });
+                    localStorage.setItem('dg_vault', JSON.stringify(dgVault));
+                    document.getElementById('dg-in-name').value = ''; document.getElementById('dg-in-file').value = '';
+                    alert("Berhasil masuk lemari!"); trackAction(); analyzeWardrobe();
+                } catch(e) { alert("Memori browser penuh! Hapus item lama."); }
+            });
+        }
+
+        function analyzeWardrobe() {
+            let t = dgVault.filter(i=>i.cat==='atasan').length, b = dgVault.filter(i=>i.cat==='bawahan').length, s = dgVault.filter(i=>i.cat==='sepatu').length;
+            let txt = document.getElementById('dg-shopping-text'), links = document.getElementById('dg-shopping-links'), tl = document.getElementById('link-tokped'), sl = document.getElementById('link-shopee');
+            if(dgVault.length < 3) {
+                txt.innerText = "Lemari lu masih sepi. Beli basic items dulu kek hoodie item atau celana cargo.";
+                tl.href = "https://www.tokopedia.com/search?q=hoodie%20hitam%20polos"; sl.href = "https://shopee.co.id/search?keyword=hoodie%20hitam%20polos"; links.style.display = "grid";
+            } else if(b < t) {
+                txt.innerText = `Atasan lu banyak (${t}), tapi bawahan dikit (${b}). Saran Joni: Beli Celana Cargo gelap.`;
+                tl.href = "https://www.tokopedia.com/search?q=celana%20cargo%20pria"; sl.href = "https://shopee.co.id/search?keyword=celana%20cargo%20pria"; links.style.display = "grid";
+            } else if(s < 2) {
+                txt.innerText = `Sepatu lu cuma ${s}. Saran Joni: Beli basic sneakers kek AF1 atau Jordan 1 putih.`;
+                tl.href = "https://www.tokopedia.com/search?q=sneakers%20putih%20pria"; sl.href = "https://shopee.co.id/search?keyword=sneakers%20putih%20pria"; links.style.display = "grid";
+            } else {
+                txt.innerText = "Lemari lu udah OP. Tinggal tambahin aksesoris kek kacamata item atau kalung rantai.";
+                tl.href = "https://www.tokopedia.com/search?q=kalung%20rantai%20pria%20titanium"; sl.href = "https://shopee.co.id/search?keyword=kalung%20rantai%20pria%20titanium"; links.style.display = "grid";
+            }
+        }
+
+        function generateDrip() {
+            let t = dgVault.filter(i=>i.cat==='atasan'), b = dgVault.filter(i=>i.cat==='bawahan'), s = dgVault.filter(i=>i.cat==='sepatu');
+            if(t.length < 1 || b.length < 1 || s.length < 1) return alert("Vault butuh min. 1 Atasan, 1 Bawahan, 1 Sepatu!");
+            
+            let mood = document.getElementById('dg-mood').value;
+            const getB = (arr) => { let match = arr.filter(i=>i.style===mood); return match.length > 0 ? match[Math.floor(Math.random()*match.length)] : arr[Math.floor(Math.random()*arr.length)]; };
+            
+            curFit = { top: getB(t), bot: getB(b), shoe: getB(s), score: Math.floor(Math.random()*3)+8 };
+            
+            document.getElementById('dg-result-card').style.display = 'block';
+            document.getElementById('dg-score').innerText = `${curFit.score}/10 🔥`;
+            document.getElementById('dg-slot-t').innerHTML = `<img src="${curFit.top.img}">`; document.getElementById('dg-slot-b').innerHTML = `<img src="${curFit.bot.img}">`; document.getElementById('dg-slot-s').innerHTML = `<img src="${curFit.shoe.img}">`;
+            
+            localStorage.setItem('dg_last', JSON.stringify({top: curFit.top.img, bot: curFit.bot.img, shoe: curFit.shoe.img}));
+            trackAction(); renderHome();
+        }
+
+        function exportToIG() {
+            if(!curFit) return; alert("Memproses gambar untuk IG Story... 📸");
+            const expNode = document.getElementById('ig-export-node');
+            document.getElementById('exp-t').src = curFit.top.img; document.getElementById('exp-b').src = curFit.bot.img; document.getElementById('exp-s').src = curFit.shoe.img; document.getElementById('exp-score').innerText = `${curFit.score}/10`;
+            
+            expNode.style.left = '0'; expNode.style.top = '0'; expNode.style.zIndex = '99999';
+            html2canvas(expNode, { backgroundColor: '#0a0a0c', scale: 1, useCORS: true }).then(canvas => {
+                const link = document.createElement('a'); link.download = 'alyrn_Drip.jpg'; link.href = canvas.toDataURL('image/jpeg', 0.9); link.click();
+                expNode.style.left = '-9999px'; expNode.style.zIndex = '-9999px';
+            });
+        }
+
+        // === 7. UTBK GRIND LOGIC (Global Interval - Anti Reset) ===
+        let uTime = 25 * 60, uId = null;
+        function renderUTBK() {
+            let m = Math.floor(uTime/60).toString().padStart(2,'0'), s = (uTime%60).toString().padStart(2,'0');
+            document.getElementById('utbk-timer').innerText = `${m}:${s}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('utbk-btn-start');
+            if(uId) { clearInterval(uId); uId = null; btn.innerText = "Resume"; btn.style.background = "#f59e0b"; return; }
+            btn.innerText = "Pause"; btn.style.background = "#f97316";
+            
+            uId = setInterval(() => {
+                if(uTime > 0) { uTime--; renderUTBK(); } else {
+                    clearInterval(uId); uId = null; uXP += 50; localStorage.setItem('patur_xp', uXP); trackAction(); alert("Sesi Grind Selesai! +50 XP 🔥");
+                    uTime = 25*60; btn.innerText = "Mulai Fokus"; btn.style.background = "#f43f5e"; renderUTBK(); renderHome();
+                }
+            }, 1000);
+        }
+
+        function resetTimer() { clearInterval(uId); uId=null; uTime=25*60; document.getElementById('utbk-btn-start').innerText="Mulai Fokus"; document.getElementById('utbk-btn-start').style.background="#f43f5e"; renderUTBK(); }
+
+        let uAns = false, uCur = null;
+        function generateUTBK() {
+            uAns = false; let type = Math.floor(Math.random() * 3); let q = "", a = 0, exp = "";
+            if(type === 0) {
+                let h = (Math.floor(Math.random() * 5) + 3) * 10, d = (Math.floor(Math.random() * 3) + 1) * 10, b = Math.floor(Math.random() * 3) + 3, t = b + Math.floor(Math.random() * 3) + 1;
+                let hd = (b * h) * (1 - d/100), hn = (t - b) * h; a = hd + hn;
+                q = `Harga tiket Rp${h}.000. Beli ${b} tiket sekaligus diskon ${d}% (sisa harga normal). Berapa bayar untuk ${t} tiket?`;
+                exp = `${b} tiket diskon ${d}% = ${hd}k. Sisa ${t-b} tiket normal = ${hn}k. Total = ${a}k.`;
+            } else if(type === 1) {
+                let v1 = Math.floor(Math.random()*3+4)*10, v2 = Math.floor(Math.random()*3+6)*10, t1 = Math.floor(Math.random()*2+1), t2 = Math.floor(Math.random()*2+1);
+                let dist = (v1*t1)+(v2*t2), time = t1+t2; a = parseFloat((dist/time).toFixed(2));
+                q = `Berkendara ${v1} km/jam selama ${t1} jam, lalu di tol ${v2} km/jam selama ${t2} jam. Kecepatan rata-rata?`;
+                exp = `Jarak = ${dist} km. Waktu = ${time} jam. Rata-rata = ${dist}/${time} = ${a} km/jam.`;
+            } else {
+                let a0 = Math.floor(Math.random()*5+1)*10, w = [15, 20, 30][Math.floor(Math.random()*3)], j = Math.floor(Math.random()*2)+1;
+                let n = (j*60)/w; a = a0 * Math.pow(2, n);
+                q = `Bakteri membelah jadi 2 setiap ${w} menit. Awal ${a0} bakteri. Setelah ${j} jam jumlahnya?`;
+                exp = `${j} jam = ${j*60} menit. Membelah ${j*60}/${w} = ${n} kali. ${a0} x 2^${n} = ${a}.`;
+            }
+            let opts = new Set([a]);
+            while(opts.size < 4) { let fake = a + ((Math.random()>0.5?1:-1)*(Math.floor(Math.random()*15)+1)); if(fake>0) opts.add(fake); }
+            let optArr = Array.from(opts).sort(()=>Math.random()-0.5);
+            uCur = { q: q, opts: optArr, ans: optArr.indexOf(a), exp: exp };
+            document.getElementById('utbk-q').innerText = uCur.q; document.getElementById('utbk-exp').style.display = "none";
+            document.getElementById('utbk-opts').innerHTML = uCur.opts.map((o,i) => `<button class="btn btn-outline" style="width:100%; justify-content:flex-start; margin-bottom:10px; background:rgba(0,0,0,0.5);" id="u-opt-${i}" onclick="ansUTBK(${i})">${o.toLocaleString('id-ID')}</button>`).join('');
+        }
+
+        function ansUTBK(idx) {
+            if(uAns) return; uAns = true; let isC = (idx === uCur.ans);
+            document.querySelectorAll('#utbk-opts button').forEach((b,i) => {
+                if(i === uCur.ans) { b.style.borderColor = "#10b981"; b.style.background = "rgba(16,185,129,0.3)"; }
+                else if(i === idx && !isC) { b.style.borderColor = "#f43f5e"; b.style.background = "rgba(244,63,94,0.3)"; }
+                b.style.pointerEvents = "none";
+            });
+            let expBox = document.getElementById('utbk-exp');
+            if(isC) {
+                uXP += 10; localStorage.setItem('patur_xp', uXP); renderUTBK(); renderHome(); trackAction();
+                expBox.innerHTML = `<b>Benar! (+10 XP) 🔥</b><br>${uCur.exp}`;
+                expBox.style.borderColor = "#10b981"; expBox.style.background = "rgba(16,185,129,0.2)"; expBox.style.color = "#a7f3d0";
+            } else {
+                expBox.innerHTML = `<b>Salah Vro! 💔</b><br>${uCur.exp}`;
+                expBox.style.borderColor = "#f43f5e"; expBox.style.background = "rgba(244,63,94,0.2)"; expBox.style.color = "#fda4af";
+            }
+            expBox.style.display = "block";
+        }
+
+        // === 8. PATUR CLOUD (BACKUP/RESTORE) ===
+        function backupCloud() {
+            let data = JSON.stringify(localStorage); let blob = new Blob([data], {type: "application/json"});
+            let a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `alyrn_Backup_${getWitaDate()}.json`; a.click();
+        }
+        function restoreCloud(e) {
+            let file = e.target.files[0]; if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                try { let data = JSON.parse(evt.target.result); for(let key in data) { localStorage.setItem(key, data[key]); } alert("OS Berhasil di-Restore! Merestart sistem..."); location.reload(); } 
+                catch(err) { alert("File backup rusak atau tidak valid!"); }
+            };
+            reader.readAsText(file);
+        }
+
+        // === BOOT SEQUENCE ===
+        renderHome();
+        renderUTBK(); 
+        generateUTBK(); 
+        switchApp('home');
+    </script>
+</body>
+</html>
